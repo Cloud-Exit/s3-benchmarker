@@ -1,4 +1,4 @@
-.PHONY: help venv install install-dev setup test clean clean-all
+.PHONY: help venv install install-dev setup test clean clean-data clean-all
 .PHONY: run run-quick run-full list show compare stats
 
 VENV = venv
@@ -27,7 +27,8 @@ help:
 	@echo "  make stats           - Show provider statistics"
 	@echo ""
 	@echo "Maintenance:"
-	@echo "  make clean           - Clean up benchmark data and cache"
+	@echo "  make clean-data      - Clean up test files from storage providers"
+	@echo "  make clean           - Clean up local cache and __pycache__"
 	@echo "  make clean-all       - Clean everything including venv and database"
 	@echo "  make test            - Run tests (if available)"
 
@@ -109,7 +110,11 @@ compare: venv
 stats: venv
 	$(PYTHON) main.py stats
 
-# Clean up benchmark data
+# Clean up test files from storage providers
+clean-data: venv
+	$(PYTHON) main.py clean --all
+
+# Clean up local cache
 clean:
 	rm -rf benchmark_data/
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true

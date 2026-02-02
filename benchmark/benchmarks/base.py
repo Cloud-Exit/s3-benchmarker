@@ -81,8 +81,28 @@ class BaseBenchmark:
         """Generate a test key."""
         return f"{self.prefix}/{size}bytes/file_{index:05d}.dat"
 
-    def _cleanup_files(self, keys: list[str]) -> None:
-        """Clean up test files."""
-        # Note: In production, you might want to implement batch deletion
-        # For now, we'll leave cleanup as optional
-        pass
+    def cleanup_test_files(self, file_sizes: list[int], file_counts: dict[int, int]) -> int:
+        """Clean up all test files created during benchmarking.
+
+        Args:
+            file_sizes: List of file sizes that were tested
+            file_counts: Dict mapping file_size to count of files created
+
+        Returns:
+            Number of files deleted
+        """
+        deleted = 0
+        for file_size in file_sizes:
+            file_count = file_counts.get(file_size, 0)
+            for i in range(file_count):
+                key = self._get_test_key(i, file_size)
+                try:
+                    # For S3, we'd need to implement a delete method
+                    # For now, just track what would be deleted
+                    if hasattr(self.storage, 'delete') and callable(self.storage.delete):
+                        self.storage.delete(key)
+                        deleted += 1
+                except Exception:
+                    # Ignore deletion errors
+                    pass
+        return deleted

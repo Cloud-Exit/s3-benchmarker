@@ -102,6 +102,14 @@ def run_benchmark_suite(
             db.add_result(run_id, provider_name, provider_type, result)
 
     print("=" * 160)
+
+    # Clean up test files
+    if hasattr(storage, 'delete_prefix'):
+        print(f"\nCleaning up test files with prefix: {prefix}/")
+        deleted = storage.delete_prefix(f"{prefix}/")
+        if deleted > 0:
+            print(f"Deleted {deleted} test files")
+
     return results
 
 
@@ -426,6 +434,59 @@ def cmd_stats(args, config: Config):
     print("=" * 140)
 
 
+def cmd_clean(args, config: Config):
+    """Clean up test files."""
+    # Determine which providers to clean
+    if args.provider:
+        provider = config.get_provider(args.provider)
+        if not provider:
+            print(f"Error: Provider '{args.provider}' not found in config", file=sys.stderr)
+            sys.exit(1)
+        providers = [provider]
+    else:
+        providers = config.get_enabled_providers()
+
+    if not providers:
+        print("Error: No providers enabled", file=sys.stderr)
+        sys.exit(1)
+
+    prefix = args.prefix if args.prefix else config.benchmark.test_prefix
+
+    # Confirm before deleting unless --all flag is used
+    if not args.all:
+        provider_names = ', '.join(p.name for p in providers)
+        response = input(
+            f"\nClean test files with prefix '{prefix}/' from providers: {provider_names}?\n"
+            f"This will permanently delete all matching files. Continue? [y/N]: "
+        )
+        if response.lower() not in ('y', 'yes'):
+            print("Cancelled")
+            return
+
+    print("\n" + "=" * 80)
+    print("CLEANING TEST FILES")
+    print("=" * 80)
+
+    total_deleted = 0
+    for provider in providers:
+        try:
+            storage = get_storage(provider, config)
+            if not hasattr(storage, 'delete_prefix'):
+                print(f"{provider.name}: Cleanup not supported for this storage type")
+                continue
+
+            print(f"\n{provider.name}: Deleting files with prefix: {prefix}/")
+            deleted = storage.delete_prefix(f"{prefix}/")
+            print(f"{provider.name}: Deleted {deleted} test files")
+            total_deleted += deleted
+        except Exception as e:
+            print(f"{provider.name}: Error during cleanup: {e}", file=sys.stderr)
+
+    print("\n" + "=" * 80)
+    print(f"Total files deleted: {total_deleted}")
+    print("=" * 80)
+
+
 def format_size(size_bytes: int) -> str:
     """Format size in human-readable format."""
     if size_bytes < 1024:
@@ -492,6 +553,18 @@ def main():
     stats_parser = subparsers.add_parser("stats", help="Show provider statistics")
     stats_parser.add_argument("--provider", "-p", help="Provider to show stats for (default: all)")
 
+    # Clean up test files
+    clean_parser = subparsers.add_parser("clean", help="Clean up benchmark test files")
+    clean_parser.add_argument(
+        "--provider", "-p", help="Provider to clean (default: all enabled)"
+    )
+    clean_parser.add_argument(
+        "--prefix", help="Prefix of test files to clean (default: from config)"
+    )
+    clean_parser.add_argument(
+        "--all", "-a", action="store_true", help="Clean all test files without confirmation"
+    )
+
     args = parser.parse_args()
 
     # Default to run command if no command specified
@@ -528,6 +601,8 @@ def main():
             cmd_compare(args, config)
         elif args.command == "stats":
             cmd_stats(args, config)
+        elif args.command == "clean":
+            cmd_clean(args, config)
     except KeyboardInterrupt:
         print("\n\nInterrupted by user")
         sys.exit(1)

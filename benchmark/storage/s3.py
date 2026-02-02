@@ -187,6 +187,27 @@ class S3RequestsStorage:
             # If we can't check, assume it doesn't exist
             return False
 
+    def delete(self, key: str) -> bool:
+        """Delete a key from S3."""
+        url = f"{self.base_url}/{key}"
+
+        try:
+            resp = self.session.delete(url, timeout=10, allow_redirects=False)
+            return resp.status_code in (200, 204, 404)  # 404 means already deleted
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+            return False
+
+    def delete_prefix(self, prefix: str) -> int:
+        """Delete all keys with the given prefix. Returns count of deleted keys."""
+        deleted = 0
+        try:
+            for key in self.list_keys(prefix):
+                if self.delete(key):
+                    deleted += 1
+        except Exception:
+            pass
+        return deleted
+
     def list_keys(self, prefix: str = "") -> Iterator[str]:
         """List all keys with the given prefix."""
         continuation_token = None

@@ -47,3 +47,35 @@ class LocalStorage:
         for path in search_path.rglob("*"):
             if path.is_file():
                 yield str(path.relative_to(self.base_path))
+
+    def delete(self, key: str) -> bool:
+        """Delete a file. Returns True if successful or file didn't exist."""
+        path = self._resolve(key)
+        try:
+            if path.exists():
+                path.unlink()
+            return True
+        except Exception:
+            return False
+
+    def delete_prefix(self, prefix: str) -> int:
+        """Delete all files with the given prefix. Returns count of deleted files."""
+        deleted = 0
+        try:
+            for key in list(self.list_keys(prefix)):
+                if self.delete(key):
+                    deleted += 1
+
+            # Clean up empty directories
+            search_path = self._resolve(prefix) if prefix else self.base_path
+            if search_path.exists() and search_path.is_dir():
+                try:
+                    # Remove empty subdirectories
+                    for dirpath in sorted(search_path.rglob("*"), reverse=True):
+                        if dirpath.is_dir() and not any(dirpath.iterdir()):
+                            dirpath.rmdir()
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        return deleted
