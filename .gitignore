@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Configuration (contains credentials)
+config.toml
+
+# Old environment variables (if any)
+.env
+
+# Benchmark data
+benchmark_data/
+
+# Database
+benchmark_results.db
+benchmark_results.db-journal
+
+# Claude Code
+.claude/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Reference/backup directories
+storage.reference/

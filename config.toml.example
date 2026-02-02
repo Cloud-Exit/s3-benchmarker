@@ -1,0 +1,75 @@
+# Storadera Benchmark Configuration
+
+[benchmark]
+# Default settings for all benchmarks
+test_prefix = "benchmark-test"
+default_workers = 10
+cleanup_after = true
+runs_per_test = 3      # Number of times to run each test for fairness (results are averaged)
+
+# Retry and timeout settings for S3 operations
+max_retries = 5        # Number of retry attempts for failed uploads/downloads
+timeout_seconds = 300  # Timeout for individual operations (5 minutes)
+
+# Storage providers to benchmark
+# You can define multiple providers and enable/disable them as needed
+
+[[providers]]
+name = "storadera"
+type = "s3"
+enabled = true
+endpoint = "https://s3.eu-central-1.storadera.com"
+access_key = "your_access_key_here"
+secret_key = "your_secret_key_here"
+bucket = "your_bucket_name"
+region = "eu-central-1"
+
+[[providers]]
+name = "local"
+type = "local"
+enabled = true
+base_path = "./benchmark_data/local"
+
+# Example: MinIO (local S3-compatible storage)
+# [[providers]]
+# name = "minio"
+# type = "s3"
+# enabled = false
+# endpoint = "http://localhost:9000"
+# access_key = "minioadmin"
+# secret_key = "minioadmin"
+# bucket = "benchmark"
+# region = "us-east-1"
+
+# Example: Cloudflare R2
+# [[providers]]
+# name = "cloudflare-r2"
+# type = "s3"
+# enabled = false
+# endpoint = "https://YOUR_ACCOUNT_ID.r2.cloudflarestorage.com"
+# access_key = "your_access_key"
+# secret_key = "your_secret_key"
+# bucket = "benchmark"
+# region = "auto"
+
+# Example: Backblaze B2
+# [[providers]]
+# name = "backblaze-b2"
+# type = "s3"
+# enabled = false
+# endpoint = "https://s3.us-west-004.backblazeb2.com"
+# access_key = "your_key_id"
+# secret_key = "your_application_key"
+# bucket = "benchmark"
+# region = "us-west-004"
+
+# Example: AWS S3
+# [[providers]]
+# name = "aws-s3"
+# type = "s3"
+# enabled = false
+# endpoint = "https://s3.us-east-1.amazonaws.com"
+# access_key = "your_access_key"
+# secret_key = "your_secret_key"
+# bucket = "benchmark"
+# region = "us-east-1"
