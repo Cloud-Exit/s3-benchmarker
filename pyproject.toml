@@ -34,6 +34,7 @@ dev = [
 
 [project.scripts]
 s3-benchmarker = "benchmark.cli:main"
+s3-benchmark = "benchmark.cli:main"
 
 [build-system]
 requires = ["setuptools>=65.0", "wheel"]

@@ -4,6 +4,9 @@
 VENV = venv
 PYTHON = $(VENV)/bin/python
 PIP = $(VENV)/bin/pip
+CLI = $(VENV)/bin/s3-benchmark
+PROVIDER ?=
+PROVIDER_ARG = $(if $(strip $(PROVIDER)),-p $(PROVIDER),)
 
 # Default target
 help:
@@ -11,12 +14,14 @@ help:
 	@echo ""
 	@echo "Setup:"
 	@echo "  make venv            - Create virtual environment"
+	@echo "                         and install s3-benchmark executable into venv/bin"
 	@echo "  make install         - Create venv and install package"
 	@echo "  make install-dev     - Install with dev dependencies"
 	@echo "  make setup           - Setup config.toml from example"
 	@echo ""
 	@echo "Running Benchmarks:"
 	@echo "  make run             - Run default benchmark on all enabled providers"
+	@echo "  make run PROVIDER=x  - Run benchmark for a single provider"
 	@echo "  make run-quick       - Run quick benchmark (small files)"
 	@echo "  make run-full        - Run full benchmark (including large files)"
 	@echo ""
@@ -35,9 +40,12 @@ help:
 # Create virtual environment
 venv:
 	python -m venv $(VENV)
+	@printf '%s\n%s\n' '#!/usr/bin/env sh' 'exec "$$(dirname "$$0")/python" "$(abspath main.py)" "$$@"' > $(CLI)
+	@chmod +x $(CLI)
 	@echo ""
 	@echo "Virtual environment created at: $(VENV)/"
 	@echo "Activate with: source $(VENV)/bin/activate"
+	@echo "Then run: s3-benchmark run"
 
 # Install dependencies
 install: venv
@@ -71,7 +79,7 @@ run: venv
 		echo "Error: Virtual environment not found. Run 'make install' first."; \
 		exit 1; \
 	fi
-	$(PYTHON) main.py run
+	$(PYTHON) main.py run $(PROVIDER_ARG)
 
 # Run quick benchmark
 run-quick: venv
@@ -79,7 +87,7 @@ run-quick: venv
 		echo "Error: Virtual environment not found. Run 'make install' first."; \
 		exit 1; \
 	fi
-	$(PYTHON) main.py run --quick
+	$(PYTHON) main.py run --quick $(PROVIDER_ARG)
 
 # Run full benchmark
 run-full: venv
@@ -87,7 +95,7 @@ run-full: venv
 		echo "Error: Virtual environment not found. Run 'make install' first."; \
 		exit 1; \
 	fi
-	$(PYTHON) main.py run --full
+	$(PYTHON) main.py run --full $(PROVIDER_ARG)
 
 # List benchmark runs
 list: venv

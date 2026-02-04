@@ -135,7 +135,7 @@ class BenchmarkComparison:
         print("\nOVERALL PERFORMANCE SUMMARY")
         print("-" * 160)
         print(
-            f"{'Provider':<15} | {'Seq Write':>15} | {'Par Write':>15} | "
+            f"{'Rank':>5} | {'Provider':<15} | {'Seq Write':>15} | {'Par Write':>15} | "
             f"{'Seq Read':>15} | {'Par Read':>15} | {'Score':>10} | {'Winner':>6}"
         )
         print("-" * 160)
@@ -169,9 +169,17 @@ class BenchmarkComparison:
         sorted_overall = sorted(overall_scores.items(), key=lambda x: x[1], reverse=True)
         best_score = sorted_overall[0][1] if sorted_overall else 0
 
-        for provider_name, score in sorted_overall:
+        current_rank = 0
+        previous_score = None
+
+        for idx, (provider_name, score) in enumerate(sorted_overall, start=1):
+            if previous_score is None or abs(score - previous_score) > 1e-9:
+                current_rank = idx
+            previous_score = score
+
             stats = provider_stats[provider_name]
             winner_mark = "BEST" if score == best_score else ""
+            rank_display = f"#{current_rank}"
 
             seq_write = f"{stats['WRITE']['throughput_avg']:.1f}" if "WRITE" in stats else "N/A"
             par_write = f"{stats['WRITE-P']['throughput_avg']:.1f}" if "WRITE-P" in stats else "N/A"
@@ -179,7 +187,8 @@ class BenchmarkComparison:
             par_read = f"{stats['READ-P']['throughput_avg']:.1f}" if "READ-P" in stats else "N/A"
 
             print(
-                f"{provider_name:<15} | {seq_write:>13} MB/s | {par_write:>13} MB/s | "
+                f"{rank_display:>5} | {provider_name:<15} | {seq_write:>13} MB/s | "
+                f"{par_write:>13} MB/s | "
                 f"{seq_read:>13} MB/s | {par_read:>13} MB/s | {score:>9.1f}/100 | {winner_mark:>6}"
             )
 
